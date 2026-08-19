@@ -198,7 +198,7 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
             <MapPin className="text-amber-500" size={20} /> Transfer History
           </h2>
           <div className="space-y-4">
-            {(player.transfer_history || "2023: Promoted to Senior Team | 2021: Signed Youth Contract").split('|').map((item, index) => (
+            {(player.transfer_history || "2023: Promoted to Senior Team | 2021: Signed Youth Contract").split('|').map((item: string, index: number) => (
               <div key={index} className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
                   {index + 1}
