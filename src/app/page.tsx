@@ -145,7 +145,11 @@ export default async function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; {new Date().getFullYear()} 11WINS. All rights reserved.</p>
+                         <p>&copy; {new Date().getFullYear()} 11WINS GmbH. All rights reserved.</p>
+              <div className="flex justify-center gap-6 mt-4 text-xs">
+                <a href="/impressum" className="text-gray-400 hover:text-amber-400 transition-colors">Impressum</a>
+                <a href="/privacy" className="text-gray-400 hover:text-amber-400 transition-colors">Privacy Policy</a>
+              </div>
           </div>
         </div>
       </footer>

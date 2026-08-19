@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
 type HeaderProps = {
-  activePage: 'home' | 'roster' | 'agents' | 'contact';
+  activePage: 'home' | 'roster' | 'agents' | 'apply' | 'contact'; // <-- Added 'apply'
 };
 
 export default function Header({ activePage }: HeaderProps) {
@@ -14,6 +14,7 @@ export default function Header({ activePage }: HeaderProps) {
     { name: 'Players', href: '/', id: 'home' },
     { name: 'Roster', href: '/roster', id: 'roster' },
     { name: 'Agents', href: '/agents', id: 'agents' },
+    { name: 'Apply', href: '/apply', id: 'apply' }, // <-- Added Apply Link
     { name: 'Contact', href: '/contact', id: 'contact' },
   ];
 

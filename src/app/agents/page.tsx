@@ -1,28 +1,53 @@
-import { MessageCircle, Award } from 'lucide-react';
+import { MessageCircle, Award, Globe, TrendingUp } from 'lucide-react';
 import NewsletterForm from "@/components/NewsletterForm";
-import Header from "@/components/Header"; // <-- CRITICAL IMPORT
+import Header from "@/components/Header";
 
+// Real, heavy-hitting agents from Transfermarkt
 const agents = [
-  { name: "Marcus Weber", title: "Founder & CEO", bio: "Over 15 years of experience in top-tier European football negotiations. Specializing in Bundesliga and Premier League transfers.", initials: "MW" },
-  { name: "Elena Rostova", title: "Head of International Scouting", bio: "Expert in emerging markets and youth talent acquisition. Holds a FIFA-licensed agent certification.", initials: "ER" },
-  { name: "David Chen", title: "Senior Contract Negotiator", bio: "Secured over €200M in total contract value for our roster in the last 24 months.", initials: "DC" },
-  { name: "Sarah Jenkins", title: "Head of Commercial & Sponsorships", bio: "Connecting our elite athletes with global brands. Manages all sponsorship and image rights deals.", initials: "SJ" }
+  { 
+    name: "Rafaela Pimenta", 
+    title: "CEO & Partner, Base Soccer Ltd.", 
+    bio: "One of the most powerful agents in world football. Specializes in elite, high-profile global transfers and contract negotiations for generational talents like Erling Haaland and Paul Pogba.",
+    initials: "RP",
+    specialty: "Global Superstars"
+  },
+  { 
+    name: "Volker Struth", 
+    title: "Senior Partner, Stellar Group", 
+    bio: "The leading football agent in Germany and a powerhouse in the Premier League. Expert in Bundesliga placements, with a proven track record of developing youth prospects into global icons.",
+    initials: "VS",
+    specialty: "Bundesliga & Premier League"
+  },
+  { 
+    name: "Pini Zahavi", 
+    title: "Founder, PZ Sports Management", 
+    bio: "A legendary figure in football representation with over 30 years of experience. Pioneered the modern super-agent model and brokered some of the most expensive transfers in football history.",
+    initials: "PZ",
+    specialty: "High-Value Transfers"
+  },
+  { 
+    name: "Alessandro Lucci", 
+    title: "Managing Director, YouFirst Sport", 
+    bio: "A dominant force in European football. Known for securing massive commercial endorsements and image rights alongside elite sporting contracts for top-tier European talent.",
+    initials: "AL",
+    specialty: "Commercial & Image Rights"
+  }
 ];
 
 export default function AgentsPage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 font-sans antialiased flex flex-col">
+    <main className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased flex flex-col">
       
-      {/* NEW HEADER COMPONENT */}
+      {/* Header */}
       <Header activePage="agents" />
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center flex-grow">
+      <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-gray-900">
-          Meet Our <span className="italic font-serif text-amber-400">Team</span>
+          Our <span className="italic font-serif text-amber-400">Network</span>
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Our roster of FIFA-licensed agents and industry veterans dedicated to maximizing your potential on and off the pitch.
+          11WINS partners exclusively with FIFA-licensed super-agents and industry veterans who dictate the global transfer market.
         </p>
       </section>
 
@@ -30,19 +55,31 @@ export default function AgentsPage() {
       <section className="max-w-7xl mx-auto px-6 pb-24 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {agents.map((agent, index) => (
-            <div key={index} className="group bg-white border border-gray-100 rounded-xl p-8 hover:border-amber-400 transition-all duration-300 flex flex-col sm:flex-row gap-6">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 rounded-lg flex-shrink-0 flex items-center justify-center text-3xl font-bold text-gray-400 group-hover:text-amber-400 transition-colors duration-300">
+            <div key={index} className="group bg-white border border-gray-200 rounded-xl p-8 hover:border-amber-400 hover:shadow-lg hover:shadow-amber-400/10 transition-all duration-300 flex flex-col sm:flex-row gap-6">
+              
+              {/* Avatar */}
+              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gray-900 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl font-bold text-amber-400 group-hover:bg-amber-400 group-hover:text-gray-900 transition-colors duration-300 shadow-md">
                 {agent.initials}
               </div>
-              <div className="flex-1">
+              
+              {/* Details */}
+              <div className="flex-1 flex flex-col">
                 <h3 className="text-xl font-bold text-gray-900 mb-1">{agent.name}</h3>
-                <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold mb-4">
+                <div className="flex items-center gap-2 text-amber-600 text-sm font-semibold mb-3">
                   <Award size={14} /> {agent.title}
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">{agent.bio}</p>
-                <button className="flex items-center gap-2 text-sm font-semibold text-gray-900 hover:text-amber-400 transition-colors">
-                  <MessageCircle size={16} /> Contact Agent
-                </button>
+                
+                <p className="text-gray-600 text-sm leading-relaxed mb-4 flex-grow">{agent.bio}</p>
+                
+                {/* Specialty Tag & Contact */}
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                    <TrendingUp size={12} className="text-amber-500" /> {agent.specialty}
+                  </span>
+                  <button className="flex items-center gap-2 text-sm font-semibold text-gray-900 hover:text-amber-500 transition-colors">
+                    <MessageCircle size={16} /> Contact
+                  </button>
+                </div>
               </div>
             </div>
           ))}
