@@ -113,7 +113,7 @@ export default function ApplyForm() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nationality *</label>
-            <input required name="nationality" placeholder="e.g. German, Nigerian" value={formData.nationality} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400" />
+         <input required name="nationality" placeholder="Enter your nationality" value={formData.nationality} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Place of Birth</label>
