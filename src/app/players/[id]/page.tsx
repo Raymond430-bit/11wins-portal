@@ -254,6 +254,88 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
             <p>&copy; {new Date().getFullYear()} 11WINS. All rights reserved.</p>
           </div>
         </div>
+              {/* ========================================== */}
+      {/* SECTION 4: CONTRACT & DIGITAL SIGNING */}
+      {/* ========================================== */}
+      {player.contract_url && (
+        <section className="max-w-6xl mx-auto px-4 w-full mb-12">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+              <FileSignature className="text-amber-500" size={20} /> Official Contract & Representation
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left: Contract Info */}
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  This document outlines the official representation agreement, sponsorship terms, and legal obligations between 11WINS and the signing party.
+                </p>
+                
+                <a 
+                  href={player.contract_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-bold rounded-lg hover:bg-amber-500 hover:text-gray-900 transition-colors mb-4"
+                >
+                  <FileText size={18} /> Download / View Contract PDF
+                </a>
+
+                {player.contract_signed && player.contract_signed_at && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
+                    <p className="text-emerald-800 font-bold text-sm flex items-center gap-2">
+                      <Check size={16} /> Digitally Signed
+                    </p>
+                    <p className="text-emerald-700 text-xs mt-1">
+                      Signed by: {player.contract_signer_name || 'Authorized Party'} <br />
+                      Date: {new Date(player.contract_signed_at).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Digital Signature Form */}
+              {!player.contract_signed && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <h3 className="font-bold text-gray-900 mb-3 text-sm">Digital Acknowledgment</h3>
+                  <p className="text-xs text-gray-600 mb-4">
+                    By clicking "Sign Contract" below, you acknowledge that you have read, downloaded, and agree to the terms outlined in the official contract. This action is legally binding.
+                  </p>
+                  
+                  <input 
+                    id="signer_name"
+                    type="text" 
+                    placeholder="Enter Full Legal Name to Sign" 
+                    className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-amber-500 text-sm mb-4"
+                  />
+
+                  <button 
+                    onClick={async () => {
+                      const nameInput = document.getElementById('signer_name') as HTMLInputElement;
+                      if (!nameInput.value.trim()) {
+                        alert('Please enter your full legal name to sign.');
+                        return;
+                      }
+                      if (!window.confirm('Are you sure you want to digitally sign this contract? This action cannot be undone.')) return;
+
+                      const { error } = await supabase.from('players').update({
+                        contract_signed: true,
+                        contract_signed_at: new Date().toISOString(),
+                        contract_signer_name: nameInput.value.trim()
+                      }).eq('id', player.id);
+
+                      if (error) alert('Error signing contract: ' + error.message);
+                      else window.location.reload();
+                    }}
+                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <FileSignature size={18} /> Sign Contract
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
       </footer>
     </main>
   );

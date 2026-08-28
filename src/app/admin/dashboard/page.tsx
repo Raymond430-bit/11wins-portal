@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Plus, LogOut, Users, Upload, Edit2, X, Save, Check, Eye, FileText, Video, Phone } from 'lucide-react';
+import { Plus, LogOut, Users, Upload, Edit2, X, Save, Check, Eye, FileText, Video, Phone, FileSignature } from 'lucide-react';
 
 type Player = {
   id: string; name: string; club: string; position: string; age: number; nationality: string;
   contract_expiry: string; market_value: number; image_url: string; payment_status: string;
   payment_method: string; payment_contact: string; sponsor_owed: number;
+  contract_url?: string | null; contract_signed?: boolean | null;
 };
 
 type Application = {
@@ -17,7 +18,6 @@ type Application = {
   height: string; preferred_foot: string; place_of_birth: string; nationality: string; image_url: string;
 };
 
-// --- SUB-COMPONENT: Status Control ---
 function AppStatusControl({ appId, initialStatus, onUpdated }: { appId: string, initialStatus: string, onUpdated: () => void }) {
   const [selectedStatus, setSelectedStatus] = useState(initialStatus || 'pending');
   const [loading, setLoading] = useState(false);
@@ -48,14 +48,17 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'players' | 'applications'>('players');
   
-  // Player States
   const [players, setPlayers] = useState<Player[]>([]);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({ name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', payment_contact: '+49 123 456 7890' });
+  const [formData, setFormData] = useState({ 
+    name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', 
+    market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', 
+    payment_contact: '+49 123 456 7890', contract_url: '' 
+  });
   const [file, setFile] = useState<File | null>(null);
+  const [contractFile, setContractFile] = useState<File | null>(null);
 
-  // Application States
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
@@ -78,15 +81,32 @@ export default function DashboardPage() {
     if (data) setApplications(data);
   };
 
-  // --- PLAYER FORM LOGIC ---
   const handleEditClick = (player: Player) => {
     setEditingId(player.id);
-    setFormData({ name: player.name, club: player.club, position: player.position, age: String(player.age), nationality: player.nationality, contract_expiry: player.contract_expiry, market_value: String(player.market_value), sponsor_owed: String(player.sponsor_owed || 0), payment_status: player.payment_status || 'pending', payment_method: player.payment_method || 'whatsapp', payment_contact: player.payment_contact || '+49 123 456 7890' });
-    setFile(null); window.scrollTo({ top: 0, behavior: 'smooth' });
+    setFormData({ 
+      name: player.name, club: player.club, position: player.position, age: String(player.age), 
+      nationality: player.nationality, contract_expiry: player.contract_expiry, 
+      market_value: String(player.market_value), sponsor_owed: String(player.sponsor_owed || 0), 
+      payment_status: player.payment_status || 'pending', payment_method: player.payment_method || 'whatsapp', 
+      payment_contact: player.payment_contact || '+49 123 456 7890', contract_url: player.contract_url || '' 
+    });
+    setFile(null); setContractFile(null); 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const handleCancelEdit = () => { setEditingId(null); setFormData({ name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', payment_contact: '+49 123 456 7890' }); setFile(null); };
+
+  const handleCancelEdit = () => { 
+    setEditingId(null); 
+    setFormData({ name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', payment_contact: '+49 123 456 7890', contract_url: '' }); 
+    setFile(null); setContractFile(null); 
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setUploading(true); let imageUrl = '';
+    e.preventDefault(); 
+    setUploading(true); 
+    let imageUrl = '';
+    let contractUrl = formData.contract_url;
+
+    // Upload Player Image
     if (file) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -95,21 +115,46 @@ export default function DashboardPage() {
       const { data: publicData } = supabase.storage.from('player-images').getPublicUrl(data.path);
       imageUrl = publicData.publicUrl;
     }
-    const playerData = { ...formData, age: Number(formData.age), market_value: Number(formData.market_value), sponsor_owed: Number(formData.sponsor_owed), ...(imageUrl && { image_url: imageUrl }) };
+
+    // Upload Contract PDF
+    if (contractFile) {
+      const fileExt = contractFile.name.split('.').pop();
+      const fileName = `contract-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { data, error } = await supabase.storage.from('player-images').upload(fileName, contractFile); // Using same bucket for simplicity
+      if (error) { alert('Error uploading contract: ' + error.message); setUploading(false); return; }
+      const { data: publicData } = supabase.storage.from('player-images').getPublicUrl(data.path);
+      contractUrl = publicData.publicUrl;
+    }
+
+    const playerData = { 
+      ...formData, 
+      age: Number(formData.age), 
+      market_value: Number(formData.market_value), 
+      sponsor_owed: Number(formData.sponsor_owed), 
+      ...(imageUrl && { image_url: imageUrl }),
+      contract_url: contractUrl
+    };
+
     let error;
-    if (editingId) { const res = await supabase.from('players').update(playerData).eq('id', editingId); error = res.error; } 
-    else { const res = await supabase.from('players').insert([playerData]); error = res.error; }
+    if (editingId) { 
+      const res = await supabase.from('players').update(playerData).eq('id', editingId); 
+      error = res.error; 
+    } else { 
+      const res = await supabase.from('players').insert([playerData]); 
+      error = res.error; 
+    }
+
     if (error) alert('Error saving player: ' + error.message);
     else { handleCancelEdit(); fetchPlayers(); }
     setUploading(false);
   };
+
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/admin/login'); };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-white">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Header */}
       <header className="border-b border-gray-200 sticky top-0 z-50 bg-white/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tighter"><span className="text-amber-500">11</span>WINS <span className="text-gray-400 font-normal text-sm ml-2">Admin Portal</span></h1>
@@ -118,7 +163,6 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Tabs */}
         <div className="flex gap-2 mb-8 border-b border-gray-200">
           <button onClick={() => setActiveTab('players')} className={`px-6 py-3 font-semibold text-sm transition-colors relative ${activeTab === 'players' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
             <span className="flex items-center gap-2"><Users size={16} /> Player Roster ({players.length})</span>
@@ -130,7 +174,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* TAB 1: PLAYER ROSTER */}
         {activeTab === 'players' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
@@ -149,6 +192,8 @@ export default function DashboardPage() {
                     <input required type="number" placeholder="Market Value (€)" value={formData.market_value} onChange={e => setFormData({...formData, market_value: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm" />
                     <input type="number" placeholder="Sponsor Quota (€)" value={formData.sponsor_owed} onChange={e => setFormData({...formData, sponsor_owed: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm" />
                   </div>
+                  
+                  {/* Player Image Upload */}
                   <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center hover:border-amber-500 transition-colors">
                     <label className="cursor-pointer flex flex-col items-center gap-2">
                       <Upload size={24} className="text-gray-400" />
@@ -156,6 +201,16 @@ export default function DashboardPage() {
                       <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} className="hidden" />
                     </label>
                   </div>
+
+                  {/* Contract PDF Upload */}
+                  <div className="border-2 border-dashed border-blue-200 rounded-lg p-4 text-center hover:border-blue-500 transition-colors bg-blue-50/30">
+                    <label className="cursor-pointer flex flex-col items-center gap-2">
+                      <FileSignature size={24} className="text-blue-500" />
+                      <span className="text-sm font-medium text-gray-600">{contractFile ? contractFile.name : (formData.contract_url ? 'Contract Attached (Upload new to replace)' : 'Upload Contract PDF')}</span>
+                      <input type="file" accept="application/pdf" onChange={(e) => setContractFile(e.target.files ? e.target.files[0] : null)} className="hidden" />
+                    </label>
+                  </div>
+
                   <div className="flex gap-3 pt-2">
                     {editingId && <button type="button" onClick={handleCancelEdit} className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-gray-200"><X size={16} /> Cancel</button>}
                     <button type="submit" disabled={uploading} className="flex-1 py-3 bg-gray-900 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-amber-500 hover:text-gray-900 transition-colors disabled:opacity-50">
@@ -177,6 +232,7 @@ export default function DashboardPage() {
                         <th className="pb-3 font-medium">Club</th>
                         <th className="pb-3 font-medium text-right">Value</th>
                         <th className="pb-3 font-medium text-center">Status</th>
+                        <th className="pb-3 font-medium text-center">Contract</th>
                         <th className="pb-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
@@ -190,6 +246,15 @@ export default function DashboardPage() {
                           <td className="py-4 text-gray-600">{player.club}</td>
                           <td className="py-4 text-right font-medium text-gray-900">€{(player.market_value / 1000000).toFixed(1)}M</td>
                           <td className="py-4 text-center"><AppStatusControl appId={player.id} initialStatus={player.payment_status} onUpdated={fetchPlayers} /></td>
+                          <td className="py-4 text-center">
+                            {player.contract_signed ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full"><Check size={12} /> Signed</span>
+                            ) : player.contract_url ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full"><FileSignature size={12} /> Pending</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">None</span>
+                            )}
+                          </td>
                           <td className="py-4 text-right"><button onClick={() => handleEditClick(player)} className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"><Edit2 size={16} /></button></td>
                         </tr>
                       ))}
@@ -201,7 +266,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: SCOUTING APPLICATIONS */}
         {activeTab === 'applications' && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><FileText size={20} className="text-amber-500" /> Incoming Scouting Requests</h2>
@@ -242,7 +306,6 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* APPLICATION DETAILS MODAL */}
       {selectedApp && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setSelectedApp(null)}>
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -252,7 +315,6 @@ export default function DashboardPage() {
             </div>
             
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Left: Image */}
               <div className="md:col-span-1">
                 <div className="aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 mb-4">
                   {selectedApp.image_url ? (
@@ -268,7 +330,6 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              {/* Right: Details */}
               <div className="md:col-span-2 space-y-6">
                 <div>
                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Personal Information</h4>
@@ -299,7 +360,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* GDPR DELETE SECTION */}
             <div className="px-6 pb-6 pt-2 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50">
               <p className="text-xs text-gray-500">
                 * To comply with GDPR Article 17 (Right to Erasure), deleting this record permanently removes all personal data.
@@ -317,7 +377,6 @@ export default function DashboardPage() {
                 <X size={14} /> Delete Record (GDPR)
               </button>
             </div>
-
           </div>
         </div>
       )}
