@@ -10,6 +10,7 @@ type Player = {
   contract_expiry: string; market_value: number; image_url: string; payment_status: string;
   payment_method: string; payment_contact: string; sponsor_owed: number;
   contract_url?: string | null; contract_signed?: boolean | null;
+  bio?: string | null; career_stats?: string | null; transfer_history?: string | null;
 };
 
 type Application = {
@@ -54,7 +55,8 @@ export default function DashboardPage() {
   const [formData, setFormData] = useState({ 
     name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', 
     market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', 
-    payment_contact: '+49 123 456 7890', contract_url: '' 
+    payment_contact: '+49 123 456 7890', contract_url: '',
+    bio: '', career_stats: '', transfer_history: ''
   });
   const [file, setFile] = useState<File | null>(null);
   const [contractFile, setContractFile] = useState<File | null>(null);
@@ -88,7 +90,9 @@ export default function DashboardPage() {
       nationality: player.nationality, contract_expiry: player.contract_expiry, 
       market_value: String(player.market_value), sponsor_owed: String(player.sponsor_owed || 0), 
       payment_status: player.payment_status || 'pending', payment_method: player.payment_method || 'whatsapp', 
-      payment_contact: player.payment_contact || '+49 123 456 7890', contract_url: player.contract_url || '' 
+      payment_contact: player.payment_contact || '+49 123 456 7890', contract_url: player.contract_url || '',
+      bio: player.bio || '', career_stats: player.career_stats || '', 
+      transfer_history: player.transfer_history || '2023: Promoted to Senior Team | 2021: Signed Youth Contract'
     });
     setFile(null); setContractFile(null); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -96,7 +100,7 @@ export default function DashboardPage() {
 
   const handleCancelEdit = () => { 
     setEditingId(null); 
-    setFormData({ name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', payment_contact: '+49 123 456 7890', contract_url: '' }); 
+    setFormData({ name: '', club: '', position: '', age: '', nationality: '', contract_expiry: '', market_value: '', sponsor_owed: '', payment_status: 'pending', payment_method: 'whatsapp', payment_contact: '+49 123 456 7890', contract_url: '', bio: '', career_stats: '', transfer_history: '' }); 
     setFile(null); setContractFile(null); 
   };
 
@@ -106,7 +110,6 @@ export default function DashboardPage() {
     let imageUrl = '';
     let contractUrl = formData.contract_url;
 
-    // Upload Player Image
     if (file) {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -116,11 +119,10 @@ export default function DashboardPage() {
       imageUrl = publicData.publicUrl;
     }
 
-    // Upload Contract PDF
     if (contractFile) {
       const fileExt = contractFile.name.split('.').pop();
       const fileName = `contract-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const { data, error } = await supabase.storage.from('player-images').upload(fileName, contractFile); // Using same bucket for simplicity
+      const { data, error } = await supabase.storage.from('player-images').upload(fileName, contractFile);
       if (error) { alert('Error uploading contract: ' + error.message); setUploading(false); return; }
       const { data: publicData } = supabase.storage.from('player-images').getPublicUrl(data.path);
       contractUrl = publicData.publicUrl;
@@ -177,7 +179,7 @@ export default function DashboardPage() {
         {activeTab === 'players' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm sticky top-24">
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
                 <h2 className="text-lg font-bold mb-6 flex items-center gap-2">{editingId ? <Edit2 size={20} className="text-amber-500" /> : <Plus size={20} className="text-amber-500" />} {editingId ? 'Edit Player' : 'Add New Player'}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <input required placeholder="Player Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm" />
@@ -209,6 +211,41 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium text-gray-600">{contractFile ? contractFile.name : (formData.contract_url ? 'Contract Attached (Upload new to replace)' : 'Upload Contract PDF')}</span>
                       <input type="file" accept="application/pdf" onChange={(e) => setContractFile(e.target.files ? e.target.files[0] : null)} className="hidden" />
                     </label>
+                  </div>
+
+                  {/* Bio Section */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">Scouting Report / Bio</label>
+                    <textarea 
+                      placeholder="Describe the player's strengths, playing style, and potential..."
+                      value={formData.bio}
+                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                      rows={4}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Career Stats */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">Career Statistics</label>
+                    <input 
+                      placeholder="e.g., Bundesliga: 24 apps | 5 goals | 8 assists"
+                      value={formData.career_stats}
+                      onChange={(e) => setFormData({...formData, career_stats: e.target.value})}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Transfer History */}
+                  <div>
+                    <label className="block text-sm font-bold text-gray-900 mb-2">Transfer History</label>
+                    <input 
+                      placeholder="e.g., 2023: Joined Bayern Munich | 2021: Youth Promotion"
+                      value={formData.transfer_history}
+                      onChange={(e) => setFormData({...formData, transfer_history: e.target.value})}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-500 text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Separate entries with | (pipe symbol)</p>
                   </div>
 
                   <div className="flex gap-3 pt-2">

@@ -94,8 +94,8 @@ export default function AgentsPage() {
               <h3 className="text-2xl font-bold mb-6"><span className="text-amber-400">11</span>WINS</h3>
               <div className="mb-8">
                 <h4 className="font-bold text-gray-300 mb-3 uppercase tracking-wider text-sm">Contact Us</h4>
-                <p className="text-gray-400 mb-2">123 Football Avenue</p>
-                <p className="text-gray-400 mb-2">Munich, Germany</p>
+                <p className="text-gray-400 mb-2">Ludwig-Ganghofer-Straße 1</p>
+                <p className="text-gray-400 mb-2">82031 Grünwald, Germany</p>
                 <p className="text-gray-400 mb-2">+49 89 12345678</p>
                 <p className="text-gray-400">contact@11wins-agency.com</p>
               </div>
