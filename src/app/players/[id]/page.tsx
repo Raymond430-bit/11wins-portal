@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
-import { ArrowLeft, TrendingUp, Calendar, MapPin, Ruler, Flag, Shield, Award, ExternalLink, UserCheck } from "lucide-react";
+import { ArrowLeft, TrendingUp, Calendar, MapPin, Ruler, Flag, Shield, Award, ExternalLink, UserCheck, Check } from "lucide-react";
 import Header from "@/components/Header";
 import NewsletterForm from "@/components/NewsletterForm";
 
