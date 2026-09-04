@@ -2,14 +2,15 @@
   "name": "11wins-portal",
   "version": "0.1.0",
   "private": true,
-     "scripts": {
-     "dev": "next dev --webpack",
-     "build": "next build",
-     "start": "next start",
-     "lint": "next lint"
-   },
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
+    "dotenv": "^17.4.2",
     "framer-motion": "^13.1.0",
     "lucide-react": "^1.26.0",
     "next": "16.2.11",
