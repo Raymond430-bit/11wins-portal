@@ -19,32 +19,57 @@ type Application = {
   height: string; preferred_foot: string; place_of_birth: string; nationality: string; image_url: string;
 };
 
-function AppStatusControl({ appId, initialStatus, onUpdated }: { appId: string, initialStatus: string, onUpdated: () => void }) {
+function AppStatusControl({ appId, initialStatus, tableName, columnName = 'status', onUpdated }: { 
+  appId: string, 
+  initialStatus: string, 
+  tableName: 'players' | 'applications', 
+  columnName?: 'payment_status' | 'status', 
+  onUpdated: () => void 
+}) {
   const [selectedStatus, setSelectedStatus] = useState(initialStatus || 'pending');
   const [loading, setLoading] = useState(false);
 
   const handleApply = async () => {
     setLoading(true);
-    await supabase.from('applications').update({ status: selectedStatus }).eq('id', appId);
-    onUpdated();
+    
+    const { error } = await supabase
+      .from(tableName)
+      .update({ [columnName]: selectedStatus })
+      .eq('id', appId);
+      
+    if (error) {
+      alert('Error updating status: ' + error.message);
+    } else {
+      onUpdated(); // This refreshes the table so you see the change instantly
+    }
+    
     setLoading(false);
   };
 
   return (
     <div className="flex items-center gap-2">
-      <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} className="p-1.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-amber-400 w-24">
+      <select 
+        value={selectedStatus} 
+        onChange={(e) => setSelectedStatus(e.target.value)} 
+        className="p-1.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-amber-400 w-32"
+      >
         <option value="pending">Pending</option>
-        <option value="reviewed">Reviewed</option>
+        <option value="pending_verification">Verifying</option>
+        <option value="paid">Paid</option>
+        <option value="overdue">Overdue</option>
         <option value="rejected">Rejected</option>
       </select>
-      <button onClick={handleApply} disabled={loading} className="p-1.5 bg-gray-900 text-white rounded hover:bg-amber-400 hover:text-gray-900 transition-colors disabled:opacity-50">
+      <button 
+        onClick={handleApply} 
+        disabled={loading} 
+        className="p-1.5 bg-gray-900 text-white rounded hover:bg-amber-400 hover:text-gray-900 transition-colors disabled:opacity-50"
+      >
         {loading ? <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin"></div> : <Check size={14} />}
       </button>
     </div>
   );
 }
-
-export default function DashboardPage() {
+export default function DashboardPage(): import("react").JSX.Element {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'players' | 'applications'>('players');
@@ -280,18 +305,15 @@ export default function DashboardPage() {
                             {player.image_url ? <img src={player.image_url} alt={player.name} className="w-8 h-8 rounded-full object-cover border border-gray-200" /> : <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">{player.name.charAt(0)}</div>}
                             {player.name}
                           </td>
-                          <td className="py-4 text-gray-600">{player.club}</td>
-                          <td className="py-4 text-right font-medium text-gray-900">€{(player.market_value / 1000000).toFixed(1)}M</td>
-                          <td className="py-4 text-center"><AppStatusControl appId={player.id} initialStatus={player.payment_status} onUpdated={fetchPlayers} /></td>
                           <td className="py-4 text-center">
-                            {player.contract_signed ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full"><Check size={12} /> Signed</span>
-                            ) : player.contract_url ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full"><FileSignature size={12} /> Pending</span>
-                            ) : (
-                              <span className="text-xs text-gray-400">None</span>
-                            )}
-                          </td>
+  <AppStatusControl 
+    appId={player.id} 
+    initialStatus={player.payment_status} 
+    tableName="players" 
+    columnName="payment_status" 
+    onUpdated={fetchPlayers} 
+  />
+</td>
                           <td className="py-4 text-right"><button onClick={() => handleEditClick(player)} className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"><Edit2 size={16} /></button></td>
                         </tr>
                       ))}
@@ -327,12 +349,15 @@ export default function DashboardPage() {
                           {app.image_url ? <img src={app.image_url} alt={app.full_name} className="w-8 h-8 rounded-full object-cover border border-gray-200" /> : <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">{app.full_name.charAt(0)}</div>}
                           {app.full_name}
                         </td>
-                        <td className="py-4 text-gray-600">{app.age} yrs ({app.age_group})</td>
-                        <td className="py-4 text-gray-600">{app.position}</td>
-                        <td className="py-4 text-center"><AppStatusControl appId={app.id} initialStatus={app.status} onUpdated={fetchApplications} /></td>
-                        <td className="py-4 text-right">
-                          <button onClick={() => setSelectedApp(app)} className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="View Details"><Eye size={16} /></button>
-                        </td>
+                        <td className="py-4 text-center">
+                         <AppStatusControl 
+                         appId={app.id} 
+                          initialStatus={app.status} 
+                          tableName="applications" 
+                          columnName="status" 
+                          onUpdated={fetchApplications} 
+                         />
+                      </td>
                       </tr>
                     ))
                   )}
