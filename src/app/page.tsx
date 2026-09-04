@@ -4,6 +4,8 @@ import SearchablePlayerGrid from "@/components/SearchablePlayerGrid";
 import PlayerCard from "@/components/PlayerCard";
 import NewsletterForm from "@/components/NewsletterForm";
 import Header from "@/components/Header"; // <-- NEW HEADER IMPORT
+import Footer from "@/components/Footer";
+
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -125,34 +127,7 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black text-white pt-16 pb-8 w-full mt-auto">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-            <div>
-              <h3 className="text-2xl font-bold mb-6"><span className="text-amber-400">11</span>WINS</h3>
-              <div className="mb-8">
-                <h4 className="font-bold text-gray-300 mb-3 uppercase tracking-wider text-sm">Contact Us</h4>
-                <p className="text-gray-400 mb-2">123 Football Avenue</p>
-                <p className="text-gray-400 mb-2">Munich, Germany</p>
-                <p className="text-gray-400 mb-2">+49 89 12345678</p>
-                <p className="text-gray-400">contact@11wins-agency.com</p>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-6">Newsletter</h3>
-              <p className="text-gray-400 mb-4">Subscribe for the latest transfers and agency updates</p>
-              <NewsletterForm />
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-                         <p>&copy; {new Date().getFullYear()} 11WINS GmbH. All rights reserved.</p>
-              <div className="flex justify-center gap-6 mt-4 text-xs">
-                <a href="/impressum" className="text-gray-400 hover:text-amber-400 transition-colors">Impressum</a>
-                <a href="/privacy" className="text-gray-400 hover:text-amber-400 transition-colors">Privacy Policy</a>
-              </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }

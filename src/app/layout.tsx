@@ -10,10 +10,12 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "11WINS | Elite Football Representation",
   description: "Official portal for 11WINS Football Agency. Discover elite talent, scouting applications, and professional representation.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+  themeColor: "#0a3d28",
   openGraph: {
     title: '11WINS | Elite Football Representation',
     description: 'Discover our roster of world-class talent. Track market values, contract details, and sponsorship opportunities.',
-    url: 'https://11wins-agency.com',
+    url: 'https://11wins.online',
     siteName: '11WINS',
     images: [
       {
@@ -25,6 +27,17 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: '11WINS | Elite Football Representation',
+    description: 'Discover our roster of world-class talent.',
+  },
+};
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#0a3d28', // This matches your dark green header
 };
 
 export default function RootLayout({

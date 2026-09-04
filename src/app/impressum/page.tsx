@@ -13,14 +13,18 @@ export default function ImpressumPage() {
             <h2 className="text-xl font-bold text-gray-900 mb-3">Information according to § 5 TMG</h2>
             <p className="leading-relaxed">
               11WINS Football Agency GmbH<br />
-              123 Football Avenue<br />
-              80331 Munich, Germany
+              Ludwig-Ganghofer-Straße 1<br />
+              82031 Grünwald, Germany
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Represented by</h2>
-            <p className="leading-relaxed">Managing Director: [Client's Name / Placeholder]</p>
+            <p className="leading-relaxed">
+              Managing Director (Geschäftsführer): Christian Schmid<br />
+              COO: Gregor Falter<br />
+              Partners: Stephan Kallass (DE), Louis Downing (UK)
+            </p>
           </div>
 
           <div>
@@ -34,26 +38,36 @@ export default function ImpressumPage() {
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Commercial Register</h2>
             <p className="leading-relaxed">
-              Registration number: HRB [Placeholder Number]<br />
-              Register court: Munich Local Court (Amtsgericht München)
+              Registered as a German GmbH in Munich<br />
+              Register Court: Amtsgericht München<br />
+              Registration Number: HRB 243881
             </p>
           </div>
 
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-3">VAT ID</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-3">VAT Identification Number</h2>
             <p className="leading-relaxed">
-              VAT identification number according to §27 a Value Added Tax Act:<br />
-              DE [Placeholder VAT Number]
+              VAT ID according to §27 a Value Added Tax Act:<br />
+              DED2601V.HRB220145
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Responsible for content according to § 55 Abs. 2 RStV</h2>
             <p className="leading-relaxed">
-              [Client's Name / Placeholder]<br />
-              123 Football Avenue<br />
-              80331 Munich, Germany
+              Christian Schmid<br />
+              Ludwig-Ganghofer-Straße 1<br />
+              82031 Grünwald, Germany
             </p>
+          </div>
+
+          <div className="pt-8 border-t border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-3">Our Services</h2>
+            <ul className="list-disc pl-5 space-y-2 text-gray-700">
+              <li><strong>Player Representation:</strong> Contract negotiation, transfers/loans, renewals.</li>
+              <li><strong>Career Planning:</strong> Youth through post-career development, performance support.</li>
+              <li><strong>Cross-Border Placements:</strong> Market access and placements in DE/UK/Continental Europe.</li>
+            </ul>
           </div>
 
           <div className="pt-8 border-t border-gray-200">
