@@ -1,47 +1,34 @@
-import { supabase } from "@/lib/supabase";
-import { ArrowLeft } from "lucide-react";
-import SearchablePlayerGrid from "@/components/SearchablePlayerGrid";
-import NewsletterForm from "@/components/NewsletterForm";
-import Header from "@/components/Header"; // <-- CRITICAL IMPORT
+import { createClient } from '@supabase/supabase-js';
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SearchablePlayerGrid from "@/components/SearchablePlayerGrid";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
-async function getPlayers() {
-  const { data, error } = await supabase.from("players").select("*").order("market_value", { ascending: false });
-  if (error) return [];
-  return data || [];
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default async function RosterPage() {
-  const players = await getPlayers();
+  const { data: players } = await supabase
+    .from('players')
+    .select('*')
+    .order('age', { ascending: true });
 
   return (
-    <main className="min-h-screen bg-white text-gray-900 font-sans antialiased flex flex-col">
-      
-      {/* NEW HEADER COMPONENT */}
+    <main className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased flex flex-col">
       <Header activePage="roster" />
+      
+      <section className="max-w-7xl mx-auto px-6 py-16 flex-grow w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Roster</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover the next generation of football talent. Filter by age group or search by name.
+          </p>
+        </div>
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-12 text-center flex-grow">
-        <a href="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-amber-400 transition-colors mb-6">
-          <ArrowLeft size={16} /> Back to Home
-        </a>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-gray-900">
-          Full Player <span className="italic font-serif text-amber-400">Roster</span>
-        </h1>
-        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Explore our complete roster of world-class talent across all major leagues.
-        </p>
+        <SearchablePlayerGrid initialPlayers={players || []} />
       </section>
 
-      {/* Searchable Players Section */}
-      <section className="max-w-7xl mx-auto px-6 pb-24 w-full">
-        <SearchablePlayerGrid initialPlayers={players} />
-      </section>
-
-      {/* Footer */}
       <Footer />
     </main>
   );
