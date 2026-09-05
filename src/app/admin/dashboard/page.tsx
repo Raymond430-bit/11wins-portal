@@ -127,11 +127,18 @@ export default function DashboardPage() {
       ...formData, age: Number(formData.age), market_value: Number(formData.market_value), 
       sponsor_owed: Number(formData.sponsor_owed), image_url: imageUrl, contract_url: contractUrl 
     };
-
     if (editingPlayer) {
-      await supabase.from('players').update(playerData).eq('id', editingPlayer.id);
+      const { error } = await supabase.from('players').update(playerData).eq('id', editingPlayer.id);
+      if (error) {
+        alert('Error updating player: ' + error.message);
+        return; // Stop the modal from closing if it failed
+      }
     } else {
-      await supabase.from('players').insert([playerData]);
+      const { error } = await supabase.from('players').insert([playerData]);
+      if (error) {
+        alert('Error adding player: ' + error.message);
+        return;
+      }
     }
 
     setIsPlayerModalOpen(false);
