@@ -1,97 +1,65 @@
 'use client';
 
 import { useState } from 'react';
-import PlayerCard from './PlayerCard';
 import { Search, Filter } from 'lucide-react';
+import PlayerCard from './PlayerCard'; // <--- THIS IMPORTS YOUR NEW GREEN CARD
 
-type Player = {
-  id: string;
-  name: string;
-  club: string;
-  position: string;
-  age: number;
-  nationality: string;
-  contract_expiry: string;
-  market_value: number;
-  image_url: string | null;
-  sponsor_owed: number;
-  payment_status?: string | null;
-  payment_method?: string | null;
-  payment_contact?: string | null;
-  age_group?: string; // <-- Added for filtering
-};
-
-export default function SearchablePlayerGrid({ initialPlayers }: { initialPlayers: Player[] }) {
+export default function SearchablePlayerGrid({ initialPlayers }: { initialPlayers: any[] }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [ageFilter, setAgeFilter] = useState('All');
+  const [selectedAge, setSelectedAge] = useState('all');
 
-  // Filter logic: Matches BOTH search term AND age group
-  const filteredPlayers = initialPlayers.filter((player) => {
+  const safePlayers = initialPlayers || [];
+  const uniqueAges = Array.from(new Set(safePlayers.map((p: any) => p.age))).sort((a: number, b: number) => a - b);
+
+  const filteredPlayers = safePlayers.filter((player: any) => {
     const matchesSearch = 
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.club.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.nationality.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesAge = ageFilter === 'All' || player.age_group === ageFilter;
-
+      player.position.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesAge = selectedAge === 'all' || player.age === Number(selectedAge);
     return matchesSearch && matchesAge;
   });
 
-  const ageGroups = ['All', 'Senior', 'U20', 'U18', 'U16', 'U14', 'U12', 'U10', 'U8'];
-
   return (
-    <div>
-      {/* Search and Filter Bar */}
-      <div className="max-w-3xl mx-auto relative mb-12 flex flex-col sm:flex-row gap-4">
-        
-        {/* Search Input */}
-        <div className="relative flex-grow">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input 
-            type="text" 
+    <div className="space-y-8">
+      {/* Clean Search & Filter Bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search players, clubs, or positions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search players, clubs, or nationalities..." 
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors duration-300"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
-
-        {/* Age Filter Dropdown */}
-        <div className="relative sm:w-48">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          <select 
-            value={ageFilter}
-            onChange={(e) => setAgeFilter(e.target.value)}
-            className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:outline-none focus:border-amber-400 transition-colors duration-300 appearance-none cursor-pointer"
+        <div className="relative w-full md:w-48">
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <select
+            value={selectedAge}
+            onChange={(e) => setSelectedAge(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-emerald-500 appearance-none transition-colors"
           >
-            {ageGroups.map((group) => (
-              <option key={group} value={group}>{group === 'All' ? 'All Categories' : group}</option>
+            <option value="all">All Age Groups</option>
+            {uniqueAges.map((age: number) => (
+              <option key={age} value={age}>U{age}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Results Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-1 h-6 bg-amber-400 rounded-full"></div>
-        <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
-          {searchTerm || ageFilter !== 'All' 
-            ? `Search Results (${filteredPlayers.length})` 
-            : 'Full Roster'}
-        </h3>
-      </div>
-
-      {/* Players Grid */}
+      {/* The Player Grid - Now using your new PlayerCard component! */}
       {filteredPlayers.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredPlayers.map((player) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {filteredPlayers.map((player: any) => (
             <PlayerCard key={player.id} player={player} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 text-gray-500 bg-gray-50 rounded-xl border border-gray-100">
-          <p className="text-lg font-medium">No players found matching your criteria.</p>
-          <p className="text-sm mt-2">Try adjusting your search or age filter.</p>
+        <div className="text-center py-20 bg-white rounded-xl border border-gray-200 border-dashed">
+          <p className="text-lg font-medium text-gray-500">No players found matching your criteria.</p>
         </div>
       )}
     </div>
