@@ -1,8 +1,19 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  // Fetch live settings from the database
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('contact_email, contact_phone, contact_address')
+    .single();
+
+  const email = settings?.contact_email || 'contact@11wins.online';
+  const phone = settings?.contact_phone || '+49 89 3450 8820';
+  const address = settings?.contact_address || 'Ludwig-Ganghofer-Straße 1\n82031 Grünwald, Germany';
+
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased flex flex-col">
       <Header activePage="contact" />
@@ -21,9 +32,8 @@ export default function ContactPage() {
                 <MapPin className="text-amber-500 flex-shrink-0 mt-1" size={24} />
                 <div>
                   <h3 className="font-bold text-gray-900 mb-2">Visit Us</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Ludwig-Ganghofer-Straße 1<br />
-                    82031 Grünwald, Germany
+                  <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
+                    {address}
                   </p>
                 </div>
               </div>
@@ -34,7 +44,7 @@ export default function ContactPage() {
                 <Phone className="text-amber-500 flex-shrink-0 mt-1" size={24} />
                 <div>
                   <h3 className="font-bold text-gray-900 mb-2">Call Us</h3>
-                  <p className="text-gray-600 text-sm">+49 89 3450 8820</p>
+                  <p className="text-gray-600 text-sm">{phone}</p>
                   <p className="text-gray-500 text-xs mt-1">Mon-Fri, 9:00-18:00 CET</p>
                 </div>
               </div>
@@ -45,8 +55,8 @@ export default function ContactPage() {
                 <Mail className="text-amber-500 flex-shrink-0 mt-1" size={24} />
                 <div>
                   <h3 className="font-bold text-gray-900 mb-2">Email Us</h3>
-                  <a href="mailto:contact@11wins-online.com" className="text-amber-600 hover:text-amber-700 text-sm font-medium">
-                    contact@11wins-online.com
+                  <a href={`mailto:${email}`} className="text-amber-600 hover:text-amber-700 text-sm font-medium">
+                    {email}
                   </a>
                 </div>
               </div>
@@ -72,21 +82,11 @@ export default function ContactPage() {
             <form className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400"
-                  placeholder="Your full name"
-                />
+                <input type="text" required className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400" placeholder="Your full name" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input 
-                  type="email" 
-                  required
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400"
-                  placeholder="your.email@example.com"
-                />
+                <input type="email" required className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400" placeholder="your.email@example.com" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
@@ -100,17 +100,9 @@ export default function ContactPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-                <textarea 
-                  required
-                  rows={5}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400"
-                  placeholder="How can we help you?"
-                ></textarea>
+                <textarea required rows={5} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-amber-400" placeholder="How can we help you?"></textarea>
               </div>
-              <button 
-                type="submit"
-                className="w-full py-3 bg-gray-900 text-white font-bold rounded-lg hover:bg-amber-500 hover:text-gray-900 transition-colors"
-              >
+              <button type="submit" className="w-full py-3 bg-gray-900 text-white font-bold rounded-lg hover:bg-amber-500 hover:text-gray-900 transition-colors">
                 Send Message
               </button>
             </form>

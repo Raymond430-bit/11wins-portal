@@ -1,8 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
-import { ArrowLeft, TrendingUp, Calendar, MapPin, Ruler, Flag, Shield, Award, ExternalLink, UserCheck, Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, TrendingUp, Calendar, MapPin, Ruler, Flag, Shield, Award, ExternalLink, UserCheck, Check, Handshake } from "lucide-react";
 import Header from "@/components/Header";
-import NewsletterForm from "@/components/NewsletterForm";
 import Footer from "@/components/Footer";
 
 export default async function PlayerProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +27,20 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
   const assignedAgent = player.club?.toLowerCase().includes('munich') || player.club?.toLowerCase().includes('dortmund') 
     ? 'Volker Struth' : 'Patrick Williams';
 
+  const getRarityBorder = (rarity: string) => {
+    if (rarity === 'Legendary') return 'border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.2)]';
+    if (rarity === 'Epic') return 'border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]';
+    if (rarity === 'Rare') return 'border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.2)]';
+    return 'border-gray-200';
+  };
+
+  const getRarityBadge = (rarity: string) => {
+    if (rarity === 'Legendary') return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-full border border-amber-200 mb-2">★ LEGENDARY</span>;
+    if (rarity === 'Epic') return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold rounded-full border border-purple-200 mb-2">EPIC</span>;
+    if (rarity === 'Rare') return <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-full border border-blue-200 mb-2">RARE</span>;
+    return null;
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900 font-sans antialiased flex flex-col overflow-x-hidden">
       <Header activePage="roster" />
@@ -38,10 +52,11 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
       </div>
 
       {/* PLAYER HEADER */}
-      <section className="max-w-6xl mx-auto px-4 w-full bg-white border border-gray-200 rounded-lg shadow-sm mb-6 overflow-hidden">
+      <section className={`max-w-6xl mx-auto px-4 w-full bg-white border rounded-lg shadow-sm mb-6 overflow-hidden ${getRarityBorder(player.rarity || 'Common')}`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
           
           <div className="md:col-span-1 p-6 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col items-center text-center">
+            {getRarityBadge(player.rarity)}
             <div className="w-40 h-40 md:w-48 md:h-48 bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4 flex items-center justify-center">
               {player.image_url ? (
                 <img src={player.image_url} alt={player.name} className="w-full h-full object-cover" />
@@ -136,6 +151,34 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
             <Award className="text-amber-500" size={20} /> Performance Data
           </h2>
           
+          {(player.stats_goals > 0 || player.stats_assists > 0 || player.stats_appearances > 0) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <TrendingUp size={16} className="text-emerald-500" /> Season Performance Metrics
+              </h3>
+              <div className="space-y-4">
+                {[
+                  { label: 'Goals', value: player.stats_goals || 0, color: 'bg-emerald-500' },
+                  { label: 'Assists', value: player.stats_assists || 0, color: 'bg-blue-500' },
+                  { label: 'Appearances', value: player.stats_appearances || 0, color: 'bg-amber-500' }
+                ].map((stat) => {
+                  const maxStat = Math.max(player.stats_goals || 0, player.stats_assists || 0, player.stats_appearances || 0, 10);
+                  return (
+                    <div key={stat.label}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium text-gray-700">{stat.label}</span>
+                        <span className="font-bold text-gray-900">{stat.value}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className={`${stat.color} h-2.5 rounded-full transition-all duration-1000`} style={{ width: `${(stat.value / maxStat) * 100}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-500 uppercase bg-gray-50">
@@ -162,12 +205,12 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
                   <td className="px-4 py-3 text-center text-gray-700">2</td>
                   <td className="px-4 py-3 text-center text-gray-700">0 / 0</td>
                 </tr>
-                <tr className="hover:bg-gray-50 bg-gray-50/50 font-bold">
+                <tr className="bg-gray-50/50 font-bold border-t-2 border-gray-200">
                   <td className="px-4 py-3 text-gray-900">Total Current Season</td>
-                  <td className="px-4 py-3 text-center text-gray-900">28</td>
-                  <td className="px-4 py-3 text-center text-gray-900">6</td>
-                  <td className="px-4 py-3 text-center text-gray-900">10</td>
-                  <td className="px-4 py-3 text-center text-gray-900">3 / 0</td>
+                  <td className="px-4 py-3 text-center text-gray-900">{player.stats_appearances || 0}</td>
+                  <td className="px-4 py-3 text-center text-gray-900">{player.stats_goals || 0}</td>
+                  <td className="px-4 py-3 text-center text-gray-900">{player.stats_assists || 0}</td>
+                  <td className="px-4 py-3 text-center text-gray-700">-</td>
                 </tr>
               </tbody>
             </table>
@@ -213,9 +256,18 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
           <div className="mt-6 pt-4 border-t border-gray-100">
             <p className="text-xs text-gray-500 mb-2">Representation:</p>
             <p className="font-bold text-gray-900 text-sm mb-3">{assignedAgent}</p>
-            <button className="w-full py-2.5 bg-gray-900 text-white text-sm font-bold rounded hover:bg-amber-500 hover:text-gray-900 transition-colors">
+            <button className="w-full py-2.5 bg-gray-900 text-white text-sm font-bold rounded hover:bg-amber-500 hover:text-gray-900 transition-colors mb-3">
               Contact Agent
             </button>
+            
+            {/* Professional gateway to all three engagement channels */}
+            <Link 
+              href={`/engage/${player.id}`}
+              className="w-full py-2.5 bg-emerald-600 text-white text-sm font-bold rounded hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Handshake size={16} /> Partnerships & Inquiries
+            </Link>
+            <p className="text-[10px] text-gray-500 text-center mt-2">Commercial • Club Transfers • Development Fund</p>
           </div>
         </div>
       </div>
@@ -243,14 +295,14 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
                   <ExternalLink size={18} /> Download / View Contract PDF
                 </a>
 
-                {player.contract_signed && player.contract_signed_at && (
+                {player.contract_signed && (player as any).contract_signed_at && (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mt-4">
                     <p className="text-emerald-800 font-bold text-sm flex items-center gap-2">
                       <Check className="w-4 h-4" /> Digitally Signed
                     </p>
                     <p className="text-emerald-700 text-xs mt-1">
-                      Signed by: {player.contract_signer_name || 'Authorized Party'} <br />
-                      Date: {new Date(player.contract_signed_at).toLocaleString()}
+                      Signed by: {(player as any).contract_signer_name || 'Authorized Party'} <br />
+                      Date: {new Date((player as any).contract_signed_at).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -272,7 +324,6 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
 
                   <button 
                     onClick={async () => {
-                      'use client';
                       const { supabase } = await import('@/lib/supabase');
                       const nameInput = document.getElementById('signer_name') as HTMLInputElement;
                       if (!nameInput.value.trim()) {
@@ -301,7 +352,6 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
         </section>
       )}
 
-      {/* FOOTER */}
       <Footer />
     </main>
   );

@@ -4,6 +4,7 @@ import "./globals.css";
 import CookieBanner from "@/components/CookieBanner";
 import PageTransition from "@/components/PageTransition";
 import AntiInspect from "@/components/AntiInspect";
+import { ThemeProvider } from "@/components/ThemeProvider"; // <-- ADDED
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,7 +18,6 @@ export const metadata: Metadata = {
     siteName: '11WINS',
     images: [
       {
-        // This is a high-quality football image for the preview
         url: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=1200&auto=format&fit=crop', 
         width: 1200,
         height: 630,
@@ -33,11 +33,12 @@ export const metadata: Metadata = {
     description: 'Discover our roster of world-class talent.',
   },
 };
+
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#0a3d28', // This matches your dark green header
+  themeColor: '#0a3d28', 
 };
 
 export default function RootLayout({
@@ -46,13 +47,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning prevents Next.js from complaining about theme changes on load
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <PageTransition>
-          {children}
-          <CookieBanner /> 
-          <AntiInspect /> 
-        </PageTransition>
+           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <PageTransition>
+            {children}
+            <CookieBanner /> 
+            <AntiInspect /> 
+          </PageTransition>
+        </ThemeProvider>
       </body>
     </html>
   );
