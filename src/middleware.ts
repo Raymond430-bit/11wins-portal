@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest, NextFetchEvent } from 'next/server';
 
 // Clean the URL to prevent double slashes
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL)?.replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
 
-// Notice we added `event: NextFetchEvent` here
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
@@ -17,32 +16,31 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
 
   // 2. IGNORE ADMIN, API, AND STATIC ASSETS
   if (
-    pathname.startsWith('/admin') || 
-    pathname.startsWith('/api') || 
-    pathname.startsWith('/_next') || 
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.includes('.') 
+    pathname.includes('.')
   ) {
     return response;
   }
 
   // 3. CHECK IF WE HAVE THE KEYS
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    console.warn('⚠️ Middleware: Missing Supabase URL or Service Role Key!');
-    return response; 
+    console.warn(`⚠️ Middleware: Missing env vars → URL present: ${!!SUPABASE_URL}, Service Key present: ${!!SUPABASE_SERVICE_ROLE_KEY}`);
+    return response;
   }
 
   // 4. MAINTENANCE MODE & TRACKING
   try {
-    // Fetch settings (blocking, so it MUST finish before sending the page)
     const settingsRes = await fetch(`${SUPABASE_URL}/rest/v1/site_settings?select=is_maintenance_mode,maintenance_message`, {
       headers: {
         'apikey': SUPABASE_SERVICE_ROLE_KEY,
         'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
       },
-      cache: 'no-store' 
+      cache: 'no-store'
     });
-    
+
     if (settingsRes.ok) {
       const settings = await settingsRes.json();
       const isMaintenance = settings[0]?.is_maintenance_mode;
@@ -58,11 +56,26 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
       console.error('❌ Middleware: Failed to fetch settings. Status:', settingsRes.status);
     }
 
-    // Track the visitor
+    // Track the visitor with device + location
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
-    // THE MAGIC FIX: event.waitUntil keeps the Edge function alive to finish the insert!
+    // Vercel geo headers (Next 16 removed request.geo)
+    const country = request.headers.get('x-vercel-ip-country') || 'Unknown';
+    const rawCity = request.headers.get('x-vercel-ip-city') || '';
+    let city = '';
+    try {
+      city = rawCity ? decodeURIComponent(rawCity) : '';
+    } catch {
+      city = rawCity;
+    }
+
+    // Smarter device detection (iPads & Android tablets no longer lie)
+    let deviceType = 'Desktop';
+    if (userAgent.includes('iPad') || (userAgent.includes('Android') && !userAgent.includes('Mobile'))) deviceType = 'Tablet';
+    else if (userAgent.includes('iPhone') || userAgent.includes('Android') || userAgent.includes('Mobile')) deviceType = 'Mobile';
+
+    // waitUntil keeps the Edge function alive until the insert finishes
     event.waitUntil(
       fetch(`${SUPABASE_URL}/rest/v1/site_visits`, {
         method: 'POST',
@@ -70,12 +83,15 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
           'apikey': SUPABASE_SERVICE_ROLE_KEY,
           'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal' 
+          'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
           ip_address: ip,
           user_agent: userAgent,
           visited_path: pathname,
+          device_type: deviceType,
+          country: country,
+          city: city,
         }),
       }).catch(err => console.error('❌ Middleware: Tracking insert failed:', err))
     );
