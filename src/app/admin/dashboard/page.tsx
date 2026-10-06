@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Plus, LogOut, Users, Upload, Edit2, X, Save, Check, Eye, FileText, 
   Video, Phone, Trash2, Search, TrendingUp, FileSignature, Download, AlertCircle, Image as ImageIcon,
-  Activity, Smartphone, Monitor, Star, CheckCircle, Globe, DollarSign, Type, Headphones, Power, Inbox
+  Activity, Smartphone, Monitor, Tablet, Star, CheckCircle, Globe, DollarSign, Type, Headphones, Power, Inbox
 } from 'lucide-react';
 
 type Player = {
@@ -28,6 +28,7 @@ type Application = {
 
 type VisitorLog = {
   id: string; created_at: string; ip_address: string; user_agent: string; visited_path: string;
+  device_type?: string; country?: string; city?: string;
 };
 
 const AVAILABLE_TAGS = ["Verified", "Shooting Star", "Star Player", "Aggressive", "Juvenile", "Captain", "Playmaker", "Rising Talent"];
@@ -89,6 +90,13 @@ export default function DashboardPage() {
     checkUser();
   }, []);
 
+  // Live auto-refresh for visitor logs (every 8 seconds while tab is open)
+  useEffect(() => {
+    if (activeTab !== 'visitors') return;
+    const interval = setInterval(() => { fetchVisitorLogs(); }, 8000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
   const openPlayerModal = (player: Player | null = null) => {
     if (player) {
       setEditingPlayer(player);
@@ -131,7 +139,7 @@ export default function DashboardPage() {
   const totalValue = players.reduce((acc, curr) => acc + (curr.market_value || 0), 0);
   const pendingApps = applications.filter(a => a.status === 'pending').length;
   const newInquiries = inquiries.filter(i => i.status === 'new').length;
-  const getDeviceType = (ua: string) => { if (ua.includes('Mobile') || ua.includes('iPhone') || ua.includes('Android')) return 'Mobile'; if (ua.includes('Tablet') || ua.includes('iPad')) return 'Tablet'; return 'Desktop'; };
+  const getDeviceType = (log: VisitorLog) => { if (log.device_type) return log.device_type; const ua = log.user_agent || ''; if (ua.includes('iPad') || (ua.includes('Android') && !ua.includes('Mobile'))) return 'Tablet'; if (ua.includes('iPhone') || ua.includes('Android') || ua.includes('Mobile')) return 'Mobile'; return 'Desktop'; };
 
   const handleSaveSettings = async () => {
     const getVal = (id: string) => (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement)?.value || '';
@@ -288,9 +296,44 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* VISITOR LOGS TAB */}
-        {activeTab === 'visitors' && (<div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"><div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"><h2 className="font-bold text-gray-900 flex items-center gap-2"><Activity size={18} className="text-amber-500"/> Temporary Visitor Tracking</h2><span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">Last 100 Visits</span></div><div className="overflow-x-auto"><table className="w-full text-left border-collapse"><thead className="bg-gray-50 text-xs text-gray-500 uppercase"><tr><th className="p-4 font-medium">Time</th><th className="p-4 font-medium">IP Address</th><th className="p-4 font-medium">Device Type</th><th className="p-4 font-medium">Page Visited</th></tr></thead><tbody className="text-sm divide-y divide-gray-100">{visitorLogs.map((log) => (<tr key={log.id} className="hover:bg-gray-50 transition-colors"><td className="p-4 text-gray-600 whitespace-nowrap">{new Date(log.created_at).toLocaleString()}</td><td className="p-4 font-mono text-xs text-gray-700">{log.ip_address}</td><td className="p-4"><div className="flex items-center gap-2">{getDeviceType(log.user_agent) === 'Mobile' ? <Smartphone size={14} className="text-gray-400"/> : <Monitor size={14} className="text-gray-400"/>}<span className="text-gray-700">{getDeviceType(log.user_agent)}</span></div></td><td className="p-4 text-gray-600 font-medium">{log.visited_path}</td></tr>))}{visitorLogs.length === 0 && (<tr><td colSpan={4} className="p-8 text-center text-gray-500">No visitor logs recorded yet. Visit the public site to generate logs.</td></tr>)}</tbody></table></div></div>)}
-
+                {/* VISITOR LOGS TAB */}
+        {activeTab === 'visitors' && (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+              <h2 className="font-bold text-gray-900 flex items-center gap-2"><Activity size={18} className="text-amber-500"/> Live Visitor Tracking</h2>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Auto-refreshing
+                </span>
+                <span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">Last 100 Visits</span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+                  <tr><th className="p-4 font-medium">Time</th><th className="p-4 font-medium">Location</th><th className="p-4 font-medium">Device</th><th className="p-4 font-medium">IP Address</th><th className="p-4 font-medium">Page Visited</th></tr>
+                </thead>
+                <tbody className="text-sm divide-y divide-gray-100">
+                  {visitorLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-4 text-gray-600 whitespace-nowrap">{new Date(log.created_at).toLocaleString()}</td>
+                      <td className="p-4 text-gray-700 font-medium">{log.city ? `${log.city}, ` : ''}{log.country || 'Unknown'}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {getDeviceType(log) === 'Mobile' ? <Smartphone size={14} className="text-gray-400"/> : getDeviceType(log) === 'Tablet' ? <Tablet size={14} className="text-gray-400"/> : <Monitor size={14} className="text-gray-400"/>}
+                          <span className="text-gray-700">{getDeviceType(log)}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono text-xs text-gray-700">{log.ip_address}</td>
+                      <td className="p-4 text-gray-600 font-medium">{log.visited_path}</td>
+                    </tr>
+                  ))}
+                  {visitorLogs.length === 0 && (<tr><td colSpan={5} className="p-8 text-center text-gray-500">No visitor logs recorded yet. Visit the public site to generate logs.</td></tr>)}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
         {/* DISPUTES TAB */}
         {activeTab === 'disputes' && (<div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden"><div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"><h2 className="font-bold text-gray-900 flex items-center gap-2"><AlertCircle size={18} className="text-amber-500"/> Dispute Resolution & Payment Verification</h2><span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">{disputedPlayers.length} Pending</span></div>{disputedPlayers.length === 0 ? (<div className="p-12 text-center text-gray-500"><CheckCircle size={48} className="mx-auto text-emerald-500 mb-4 opacity-50" /><p className="font-medium">All caught up! No pending verifications or disputes.</p></div>) : (<div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">{disputedPlayers.map((player) => (<div key={player.id} className={`border rounded-xl overflow-hidden shadow-sm flex flex-col ${player.payment_status === 'disputed' ? 'border-red-300 bg-red-50/30' : 'border-gray-200'}`}><div className="p-4 border-b border-gray-200 bg-white flex justify-between items-center"><div className="flex items-center gap-3">{player.image_url ? (<img src={player.image_url} className="w-10 h-10 rounded-full object-cover border" />) : (<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 border">{player.name.charAt(0)}</div>)}<div><h3 className="font-bold text-gray-900 text-sm">{player.name}</h3><p className="text-xs text-gray-500">Quota: €{player.sponsor_owed.toLocaleString()}</p></div></div><span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${player.payment_status === 'disputed' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{player.payment_status === 'disputed' ? 'Disputed' : 'Needs Verification'}</span></div><div className="p-4 grid grid-cols-2 gap-4 flex-grow bg-gray-50/50"><div className="space-y-3"><div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Transaction Hash</p><div className="bg-white p-2 rounded border border-gray-200 text-[10px] font-mono text-gray-700 break-all h-16 overflow-y-auto">{player.transaction_hash || 'No hash provided'}</div></div><div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Method</p><div className="bg-white p-2 rounded border border-gray-200 text-xs font-medium text-gray-900 capitalize">{player.payment_method || 'Unknown'}</div></div></div><div><p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Uploaded Proof</p>{player.payment_proof_url ? (<a href={player.payment_proof_url} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-white rounded border border-gray-200 overflow-hidden hover:border-amber-500 transition-colors"><img src={player.payment_proof_url} className="w-full h-full object-contain" /></a>) : (<div className="w-full h-32 bg-gray-200 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-500">No Image</div>)}</div></div><div className="p-3 bg-white border-t border-gray-200 grid grid-cols-3 gap-2"><button onClick={async () => { if(window.confirm('Reject this payment and mark as Overdue?')) { await supabase.from('players').update({ payment_status: 'overdue' }).eq('id', player.id); fetchDisputes(); fetchPlayers(); } }} className="py-2 bg-red-50 text-red-600 text-xs font-bold rounded hover:bg-red-100 border border-red-200">Reject</button>{player.payment_status !== 'disputed' && (<button onClick={async () => { await supabase.from('players').update({ payment_status: 'disputed' }).eq('id', player.id); fetchDisputes(); fetchPlayers(); }} className="py-2 bg-amber-50 text-amber-700 text-xs font-bold rounded hover:bg-amber-100 border border-amber-200">Flag Dispute</button>)}<button onClick={async () => { await supabase.from('players').update({ payment_status: 'paid' }).eq('id', player.id); fetchDisputes(); fetchPlayers(); }} className="py-2 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700 flex items-center justify-center gap-1"><Check size={12} /> Approve</button></div></div>))}</div>)}</div>)}
 
